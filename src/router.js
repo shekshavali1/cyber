@@ -1,6 +1,8 @@
 import { renderHome } from './pages/home.js';
 import { renderChat } from './pages/chat.js';
 import { renderRegisterPage } from './auth/register.js';
+import { renderLogin} from './auth/login.js';
+import { renderForgot} from './auth/forgot.js';
 
 const app = document.querySelector('#app');
 
@@ -9,7 +11,9 @@ const routes = {
     '/': renderHome,
     '/home': renderHome,
     '/chat': renderChat,
-    '/register' : renderRegisterPage
+    '/register' : renderRegisterPage,
+    '/login' : renderLogin,
+    '/forgot' : renderForgot
 };
 
 // Function to handle navigation
