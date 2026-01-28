@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
-// 1. Firebase Configuration (Ensure your .env file is set up correctly)
+// 1. Firebase Configuration
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -16,10 +16,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/**
- * Renders the Register Page with AI Theme and Validation
- * @param {HTMLElement} container 
- */
 export const renderRegisterPage = (container) => {
     container.innerHTML = `
     <style>
@@ -32,20 +28,27 @@ export const renderRegisterPage = (container) => {
             --text-dark: #0f172a;
         }
 
-        * { box-sizing: border-box; }
-
-        /* Modern Animated Background */
-        .page-wrapper {
-            min-height: 100vh;
-            width: 100%;
+        /* FORCE PARENT SCROLLING */
+        html, body {
+            height: auto !important;
+            min-height: 100% !important;
+            overflow: auto !important;
             margin: 0;
             padding: 0;
+        }
+
+        * { box-sizing: border-box; }
+
+        .page-wrapper {
+            min-height: 100vh !important; /* Allow it to grow */
+            width: 100%;
             font-family: 'Inter', sans-serif;
             background: linear-gradient(-45deg, #0f172a, #1e293b, #2563eb, #3b82f6);
             background-size: 400% 400%;
             animation: gradientAnimation 15s ease infinite;
             display: flex;
             flex-direction: column;
+            overflow-y: visible !important; /* Force visibility of overflow */
         }
 
         @keyframes gradientAnimation {
@@ -54,13 +57,13 @@ export const renderRegisterPage = (container) => {
             100% { background-position: 0% 50%; }
         }
 
-        /* Header Styling */
         .header-nav {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(12px);
             padding: 1.5rem;
             text-align: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
         }
 
         .header-nav h1 {
@@ -72,13 +75,12 @@ export const renderRegisterPage = (container) => {
             text-transform: uppercase;
         }
 
-        /* Card Styling */
         .content-body {
-            flex: 1;
+            flex: 1 0 auto; /* Do not let this container shrink */
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 2rem;
+            align-items: flex-start; /* Align to top so it doesn't get cut off if it expands */
+            padding: 4rem 1rem !important; /* Large padding for bottom clearance */
         }
 
         .register-card {
@@ -88,6 +90,7 @@ export const renderRegisterPage = (container) => {
             padding: 2.5rem;
             border-radius: 24px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 2rem; /* Buffer for the bottom of the page */
         }
 
         .register-card h2 {
@@ -98,7 +101,6 @@ export const renderRegisterPage = (container) => {
             font-size: 1.8rem;
         }
 
-        /* Form Layout */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -132,6 +134,7 @@ export const renderRegisterPage = (container) => {
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
 
+        /* SPINNER STYLES */
         .signup-btn {
             width: 100%;
             padding: 1rem;
@@ -143,14 +146,29 @@ export const renderRegisterPage = (container) => {
             font-size: 1rem;
             cursor: pointer;
             margin-top: 1.5rem;
-            transition: transform 0.2s, background 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.2s;
         }
 
-        .signup-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
-        .signup-btn:active { transform: translateY(0); }
         .signup-btn:disabled { background: #94a3b8; cursor: not-allowed; }
 
-        /* Error Message UI */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .error-container {
             display: none;
             background: #fef2f2;
@@ -160,7 +178,6 @@ export const renderRegisterPage = (container) => {
             border-radius: 8px;
             margin-top: 1.5rem;
             font-size: 0.85rem;
-            line-height: 1.5;
         }
 
         .footer-text {
@@ -186,34 +203,32 @@ export const renderRegisterPage = (container) => {
                             <label>Username</label>
                             <input type="text" id="u-name" required placeholder="SafetyExpert99">
                         </div>
-
                         <div class="input-box">
                             <label>Email Address</label>
                             <input type="email" id="u-email" required placeholder="name@domain.com">
                         </div>
-
                         <div class="input-box">
                             <label>Age</label>
                             <input type="number" id="u-age" required min="13" placeholder="18">
                         </div>
-
                         <div class="input-box full-row">
                             <label>Phone Number</label>
                             <input type="tel" id="u-phone" required placeholder="+1 234 567 8900">
                         </div>
-
                         <div class="input-box">
                             <label>Password</label>
                             <input type="password" id="u-pass" required placeholder="••••••••">
                         </div>
-
                         <div class="input-box">
                             <label>Confirm Password</label>
                             <input type="password" id="u-confirm" required placeholder="••••••••">
                         </div>
                     </div>
 
-                    <button type="submit" id="submit-button" class="signup-btn">Sign Up & Secure</button>
+                    <button type="submit" id="submit-button" class="signup-btn">
+                        <div class="spinner" id="loader"></div>
+                        <span id="btn-text">Sign Up & Secure</span>
+                    </button>
                     
                     <div id="error-box" class="error-container"></div>
                 </form>
@@ -224,15 +239,20 @@ export const renderRegisterPage = (container) => {
     </div>
     `;
 
-    // --- FORM LOGIC ---
     const form = container.querySelector('#registration-form');
     const btn = container.querySelector('#submit-button');
+    const loader = container.querySelector('#loader');
+    const btnText = container.querySelector('#btn-text');
     const errorBox = container.querySelector('#error-box');
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // 1. Gather Values
+        // 1. Reset state
+        errorBox.style.display = "none";
+        let validationErrors = [];
+
+        // 2. Gather values
         const email = container.querySelector('#u-email').value;
         const password = container.querySelector('#u-pass').value;
         const confirmPass = container.querySelector('#u-confirm').value;
@@ -240,17 +260,10 @@ export const renderRegisterPage = (container) => {
         const phone = container.querySelector('#u-phone').value;
         const age = container.querySelector('#u-age').value;
 
-        // 2. Clear previous errors
-        errorBox.style.display = "none";
-        errorBox.innerHTML = "";
-        let validationErrors = [];
-
-        // 3. Password Conditions Check
+        // 3. Validation
         if (password.length < 6) validationErrors.push("• Minimum 6 digits required.");
         if (!/[A-Z]/.test(password)) validationErrors.push("• Must include a Capital letter.");
-        if (!/[a-z]/.test(password)) validationErrors.push("• Must include a Small letter.");
         if (!/[0-9]/.test(password)) validationErrors.push("• Must include a Number.");
-        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) validationErrors.push("• Must include a Special Symbol.");
         if (password !== confirmPass) validationErrors.push("• Passwords do not match.");
 
         if (validationErrors.length > 0) {
@@ -259,32 +272,28 @@ export const renderRegisterPage = (container) => {
             return;
         }
 
-        // 4. Firebase Authentication & Firestore
+        // 4. Loading UI
         btn.disabled = true;
-        btn.innerText = "Processing Securly...";
+        loader.style.display = "block";
+        btnText.innerText = "Securing Account...";
 
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
             await setDoc(doc(db, "users", user.uid), {
-                username,
-                email,
-                phone,
-                age: parseInt(age),
-                uid: user.uid,
-                role: "user",
-                createdAt: new Date().toISOString()
+                username, email, phone, age: parseInt(age),
+                uid: user.uid, role: "user", createdAt: new Date().toISOString()
             });
 
-            alert("Account Created Successfully! Welcome to the AI Safety System.");
-            // Optional: Use your router to navigate, e.g., window.location.hash = '#/dashboard';
+            alert("Account Created Successfully!");
             
         } catch (error) {
             errorBox.innerText = error.message;
             errorBox.style.display = "block";
             btn.disabled = false;
-            btn.innerText = "Sign Up & Secure";
+            loader.style.display = "none";
+            btnText.innerText = "Sign Up & Secure";
         }
     });
 };
