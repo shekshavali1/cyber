@@ -14,6 +14,7 @@ const routes = {
     '/register' : renderRegisterPage,
     '/login' : renderLogin,
     '/forgot' : renderForgot
+    
 };
 
 // Function to handle navigation
