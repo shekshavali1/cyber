@@ -1,5 +1,6 @@
 import { renderHome } from './pages/home.js';
 import { renderChat } from './pages/chat.js';
+import { renderRegisterPage } from './auth/register.js';
 
 const app = document.querySelector('#app');
 
@@ -7,7 +8,8 @@ const app = document.querySelector('#app');
 const routes = {
     '/': renderHome,
     '/home': renderHome,
-    '/chat': renderChat
+    '/chat': renderChat,
+    '/register' : renderRegisterPage
 };
 
 // Function to handle navigation
