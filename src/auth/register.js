@@ -1,299 +1,228 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../firebase.js";
 
-// 1. Firebase Configuration
-const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
+export function renderRegisterPage(app) {
+  app.innerHTML = `
+    <div class="min-h-screen flex items-center justify-center bg-[#060814] text-slate-100 p-6 relative font-['Outfit',sans-serif]">
+      <!-- Background Ambient Glows -->
+      <div class="absolute top-[10%] left-[20%] w-[350px] h-[350px] rounded-full bg-indigo-900/10 blur-[100px] pointer-events-none"></div>
+      <div class="absolute bottom-[10%] right-[20%] w-[350px] h-[350px] rounded-full bg-cyan-950/15 blur-[100px] pointer-events-none"></div>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+      <!-- Register Card -->
+      <div class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-xl w-full max-w-lg rounded-2xl shadow-2xl p-8 z-10">
+        
+        <!-- Logo -->
+        <div class="flex flex-col items-center mb-6">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 mb-3">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+            CyberGuard AI
+          </h1>
+          <p class="text-xs tracking-wide uppercase text-cyan-400 font-semibold mt-1">
+            AI Cyberbullying Protection
+          </p>
+        </div>
 
-export const renderRegisterPage = (container) => {
-    container.innerHTML = `
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        <h2 class="text-xl font-semibold text-slate-200 mb-6 text-center">Create a new account</h2>
 
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --glass: rgba(255, 255, 255, 0.92);
-            --text-dark: #0f172a;
-        }
-
-        /* FORCE PARENT SCROLLING */
-        html, body {
-            height: auto !important;
-            min-height: 100% !important;
-            overflow: auto !important;
-            margin: 0;
-            padding: 0;
-        }
-
-        * { box-sizing: border-box; }
-
-        .page-wrapper {
-            min-height: 100vh !important; /* Allow it to grow */
-            width: 100%;
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(-45deg, #0f172a, #1e293b, #2563eb, #3b82f6);
-            background-size: 400% 400%;
-            animation: gradientAnimation 15s ease infinite;
-            display: flex;
-            flex-direction: column;
-            overflow-y: visible !important; /* Force visibility of overflow */
-        }
-
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .header-nav {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            padding: 1.5rem;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            flex-shrink: 0;
-        }
-
-        .header-nav h1 {
-            color: white;
-            margin: 0;
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        .content-body {
-            flex: 1 0 auto; /* Do not let this container shrink */
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align to top so it doesn't get cut off if it expands */
-            padding: 4rem 1rem !important; /* Large padding for bottom clearance */
-        }
-
-        .register-card {
-            background: var(--glass);
-            width: 100%;
-            max-width: 500px;
-            padding: 2.5rem;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            margin-bottom: 2rem; /* Buffer for the bottom of the page */
-        }
-
-        .register-card h2 {
-            margin-top: 0;
-            font-weight: 800;
-            color: var(--text-dark);
-            text-align: center;
-            font-size: 1.8rem;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .full-row { grid-column: span 2; }
-
-        .input-box { margin-bottom: 1rem; }
-        .input-box label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: #64748b;
-            text-transform: uppercase;
-        }
-
-        .input-box input {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .input-box input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-        }
-
-        /* SPINNER STYLES */
-        .signup-btn {
-            width: 100%;
-            padding: 1rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 1.5rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            transition: background 0.2s;
-        }
-
-        .signup-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s linear infinite;
-            display: none;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .error-container {
-            display: none;
-            background: #fef2f2;
-            border-left: 4px solid #ef4444;
-            color: #b91c1c;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1.5rem;
-            font-size: 0.85rem;
-        }
-
-        .footer-text {
-            text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.9rem;
-            color: #64748b;
-        }
-    </style>
-
-    <div class="page-wrapper">
-        <header class="header-nav">
-            <h1>🛡️ AI System to Detect Online Harassment & Cyberbullying</h1>
-        </header>
-
-        <main class="content-body">
-            <div class="register-card">
-                <h2>Create Account</h2>
-                
-                <form id="registration-form">
-                    <div class="form-grid">
-                        <div class="input-box full-row">
-                            <label>Username</label>
-                            <input type="text" id="u-name" required placeholder="SafetyExpert99">
-                        </div>
-                        <div class="input-box">
-                            <label>Email Address</label>
-                            <input type="email" id="u-email" required placeholder="name@domain.com">
-                        </div>
-                        <div class="input-box">
-                            <label>Age</label>
-                            <input type="number" id="u-age" required min="13" placeholder="18">
-                        </div>
-                        <div class="input-box full-row">
-                            <label>Phone Number</label>
-                            <input type="tel" id="u-phone" required placeholder="+1 234 567 8900">
-                        </div>
-                        <div class="input-box">
-                            <label>Password</label>
-                            <input type="password" id="u-pass" required placeholder="••••••••">
-                        </div>
-                        <div class="input-box">
-                            <label>Confirm Password</label>
-                            <input type="password" id="u-confirm" required placeholder="••••••••">
-                        </div>
-                    </div>
-
-                    <button type="submit" id="submit-button" class="signup-btn">
-                        <div class="spinner" id="loader"></div>
-                        <span id="btn-text">Sign Up & Secure</span>
-                    </button>
-                    
-                    <div id="error-box" class="error-container"></div>
-                </form>
-
-                <p class="footer-text">Already a member? <a href="/login" style="color:var(--primary); font-weight:600; text-decoration:none;">Log In</a></p>
+        <form id="registerForm" class="space-y-4">
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Username -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Username</label>
+              <input
+                id="username"
+                type="text"
+                required
+                class="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all text-sm font-medium"
+                placeholder="cyber_guard">
             </div>
-        </main>
+
+            <!-- Email -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Email</label>
+              <input
+                id="email"
+                type="email"
+                required
+                class="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all text-sm font-medium"
+                placeholder="name@example.com">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Phone Number -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Phone Number</label>
+              <input
+                id="phone"
+                type="tel"
+                required
+                class="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all text-sm font-medium"
+                placeholder="9876543210">
+            </div>
+
+            <!-- Age -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Age</label>
+              <input
+                id="age"
+                type="number"
+                required
+                class="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all text-sm font-medium"
+                placeholder="18">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Password -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+              <input
+                id="password"
+                type="password"
+                required
+                class="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all text-sm font-medium"
+                placeholder="••••••••">
+            </div>
+
+            <!-- Confirm Password -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Confirm Password</label>
+              <input
+                id="confirmPassword"
+                type="password"
+                required
+                class="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all text-sm font-medium"
+                placeholder="••••••••">
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          <p id="errorMsg" class="text-rose-400 font-semibold text-xs min-h-[16px] text-center"></p>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            id="registerBtn"
+            class="w-full bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white py-3 rounded-xl font-bold transition-all transform active:scale-95 shadow-lg shadow-cyan-500/10 mt-2">
+            Create Account
+          </button>
+        </form>
+
+        <div class="mt-6 pt-5 border-t border-slate-800/80 text-center">
+          <p class="text-sm text-slate-400">
+            Already have an account? 
+            <a href="#/login" class="text-cyan-400 hover:text-cyan-300 font-bold hover:underline transition-colors">
+              Login
+            </a>
+          </p>
+        </div>
+
+      </div>
     </div>
-    `;
+  `;
 
-    const form = container.querySelector('#registration-form');
-    const btn = container.querySelector('#submit-button');
-    const loader = container.querySelector('#loader');
-    const btnText = container.querySelector('#btn-text');
-    const errorBox = container.querySelector('#error-box');
+  const form = document.getElementById("registerForm");
+  const errorMsg = document.getElementById("errorMsg");
+  const registerBtn = document.getElementById("registerBtn");
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorMsg.textContent = "";
 
-        // 1. Reset state
-        errorBox.style.display = "none";
-        let validationErrors = [];
+    const username = document.getElementById("username").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const age = document.getElementById("age").value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
 
-        // 2. Gather values
-        const email = container.querySelector('#u-email').value;
-        const password = container.querySelector('#u-pass').value;
-        const confirmPass = container.querySelector('#u-confirm').value;
-        const username = container.querySelector('#u-name').value;
-        const phone = container.querySelector('#u-phone').value;
-        const age = container.querySelector('#u-age').value;
+    // Validation rules
+    if (username.length < 3) {
+      errorMsg.textContent = "Username must contain at least 3 characters.";
+      return;
+    }
 
-        // 3. Validation
-        if (password.length < 6) validationErrors.push("• Minimum 6 digits required.");
-        if (!/[A-Z]/.test(password)) validationErrors.push("• Must include a Capital letter.");
-        if (!/[0-9]/.test(password)) validationErrors.push("• Must include a Number.");
-        if (password !== confirmPass) validationErrors.push("• Passwords do not match.");
+    if (phone.length < 10) {
+      errorMsg.textContent = "Enter a valid phone number.";
+      return;
+    }
 
-        if (validationErrors.length > 0) {
-            errorBox.innerHTML = validationErrors.join("<br>");
-            errorBox.style.display = "block";
-            return;
-        }
+    if (age < 13) {
+      errorMsg.textContent = "Age must be 13 or above to register.";
+      return;
+    }
 
-        // 4. Loading UI
-        btn.disabled = true;
-        loader.style.display = "block";
-        btnText.innerText = "Securing Account...";
+    if (password.length < 6) {
+      errorMsg.textContent = "Password must contain at least 6 characters.";
+      return;
+    }
 
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+    if (!/[A-Z]/.test(password)) {
+      errorMsg.textContent = "Password must contain one capital letter.";
+      return;
+    }
 
-            await setDoc(doc(db, "users", user.uid), {
-                username, email, phone, age: parseInt(age),
-                uid: user.uid, role: "user", createdAt: new Date().toISOString()
-            });
+    if (!/[a-z]/.test(password)) {
+      errorMsg.textContent = "Password must contain one small letter.";
+      return;
+    }
 
-            alert("Account Created Successfully!");
-            
-        } catch (error) {
-            errorBox.innerText = error.message;
-            errorBox.style.display = "block";
-            btn.disabled = false;
-            loader.style.display = "none";
-            btnText.innerText = "Sign Up & Secure";
-        }
-    });
-};
+    if (!/[0-9]/.test(password)) {
+      errorMsg.textContent = "Password must contain one number.";
+      return;
+    }
+
+    if (!/[!@#$%^&*]/.test(password)) {
+      errorMsg.textContent = "Password must contain one special symbol.";
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      errorMsg.textContent = "Passwords do not match.";
+      return;
+    }
+
+    try {
+      registerBtn.disabled = true;
+      registerBtn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg> Creating Account...
+      `;
+
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        username,
+        email,
+        phone,
+        age: Number(age),
+        role: "user",
+        blocked: false,
+        blockedUsers: [],
+        reports: 0,
+        totalMessages: 0,
+        harmfulMessages: 0,
+        createdAt: new Date().toISOString()
+      });
+
+      alert("Registration Successful!");
+      window.location.hash = "#/dashboard";
+    } catch (error) {
+      errorMsg.textContent = error.message.replace("Firebase: ", "");
+    } finally {
+      registerBtn.disabled = false;
+      registerBtn.innerHTML = "Create Account";
+    }
+  });
+}

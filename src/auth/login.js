@@ -1,106 +1,113 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
-
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase.js";
 
 export function renderLogin(app) {
-  const showLogin = () => {
-    app.innerHTML = `
-      <div class="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
-        <div class="w-full max-w-[420px] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-          <div class="bg-blue-600 p-8 text-center text-white">
-            <h1 class="text-3xl font-extrabold tracking-tight">Cyber Bullying</h1>
-            <p class="text-blue-100 mt-2 opacity-90">Secure Access Management</p>
+  app.innerHTML = `
+    <div class="min-h-screen flex items-center justify-center bg-[#060814] text-slate-100 p-6 relative font-['Outfit',sans-serif]">
+      <!-- Background Ambient Glows -->
+      <div class="absolute top-[10%] left-[20%] w-[350px] h-[350px] rounded-full bg-indigo-900/10 blur-[100px] pointer-events-none"></div>
+      <div class="absolute bottom-[10%] right-[20%] w-[350px] h-[350px] rounded-full bg-cyan-950/15 blur-[100px] pointer-events-none"></div>
+
+      <!-- Login Card -->
+      <div class="bg-slate-900/40 border border-slate-800/80 backdrop-blur-xl w-full max-w-md rounded-2xl shadow-2xl p-8 z-10">
+        
+        <!-- Logo -->
+        <div class="flex flex-col items-center mb-8">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 mb-3">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
           </div>
-          <div class="p-8">
-            <div class="space-y-5">
-              <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
-                <input id="email" type="email" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" placeholder="name@company.com" />
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Password</label>
-                <input id="password" type="password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" placeholder="••••••••" />
-              </div>
-              <button id="loginBtn" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all transform active:scale-95 shadow-lg shadow-blue-200">Sign In</button>
-              <p id="auth-msg" class="text-center text-sm min-h-[20px]"></p>
-              <div class="pt-4 border-t border-slate-100 text-center space-y-3">
-                <button id="to-forgot" class="text-sm text-blue-600 font-bold hover:text-blue-800 transition">Forgot password?</button>
-              </div>
-              <a href="#/register" class="block text-sm text-blue-600 font-bold text-center space-y-3">
-               Create a new account
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+            CyberGuard AI
+          </h1>
+          <p class="text-xs tracking-wide uppercase text-cyan-400 font-semibold mt-1">
+            AI Cyberbullying Protection
+          </p>
+        </div>
+
+        <h2 class="text-xl font-semibold text-slate-200 mb-6 text-center">Login to your account</h2>
+
+        <form id="loginForm" class="space-y-5">
+          <!-- Email Field -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              required
+              class="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all font-medium"
+              placeholder="name@company.com">
+          </div>
+
+          <!-- Password Field -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Password</label>
+              <a href="#/forgot" class="text-xs font-semibold text-cyan-400 hover:text-cyan-300 hover:underline transition-colors">
+                Forgot Password?
               </a>
             </div>
+            <input
+              id="password"
+              type="password"
+              required
+              class="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all font-medium"
+              placeholder="••••••••">
           </div>
+
+          <!-- Error Message -->
+          <p id="loginError" class="text-rose-400 font-semibold text-xs min-h-[16px] text-center"></p>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            id="loginBtn"
+            class="w-full bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white py-3.5 rounded-xl font-bold transition-all transform active:scale-95 shadow-lg shadow-cyan-500/10">
+            Login
+          </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-800/80 text-center">
+          <p class="text-sm text-slate-400">
+            Don't have an account? 
+            <a href="#/register" class="text-cyan-400 hover:text-cyan-300 font-bold hover:underline transition-colors">
+              Create Account
+            </a>
+          </p>
         </div>
+
       </div>
-    `;
+    </div>
+  `;
 
-    document.getElementById("to-forgot").onclick = showForgot;
-    document.getElementById("loginBtn").onclick = async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const msg = document.getElementById("auth-msg");
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        msg.className = "text-center text-sm text-green-600 font-medium";
-        msg.textContent = "Success! Redirecting...";
-      } catch (err) {
-        msg.className = "text-center text-sm text-red-500";
-        msg.textContent = err.message.replace("Firebase: ", "");
-      }
-    };
-  };
+  const form = document.getElementById("loginForm");
+  const error = document.getElementById("loginError");
+  const btn = document.getElementById("loginBtn");
 
-  const showForgot = () => {
-    app.innerHTML = `
-      <div class="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
-        <div class="w-full max-w-[420px] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-          <div class="bg-slate-800 p-8 text-center text-white">
-            <h1 class="text-2xl font-bold italic">Cyber Bullying</h1>
-            <p class="text-slate-400 mt-2 text-sm">Reset Your Account Password</p>
-          </div>
-          <div class="p-8">
-            <div class="space-y-5">
-              <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Account Email</label>
-                <input id="forgot-email" type="email" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-500 transition-all" placeholder="Enter your email" />
-              </div>
-              <button id="resetBtn" class="w-full py-4 bg-slate-800 hover:bg-black text-white rounded-xl font-bold transition-all shadow-lg shadow-slate-200">Send Recovery Link</button>
-              <p id="forgot-msg" class="text-center text-sm min-h-[20px]"></p>
-              <div class="text-center">
-                <button id="back-login" class="text-sm font-bold text-slate-500 hover:text-slate-800 underline underline-offset-4">Return to login</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    error.textContent = "";
 
-    document.getElementById("back-login").onclick = showLogin;
-    document.getElementById("resetBtn").onclick = async () => {
-      const email = document.getElementById("forgot-email").value;
-      const msg = document.getElementById("forgot-msg");
-      try {
-        await sendPasswordResetEmail(auth, email);
-        msg.className = "text-center text-sm text-green-600 font-medium";
-        msg.textContent = "Email sent! Please check your inbox.";
-      } catch (err) {
-        msg.className = "text-center text-sm text-red-500";
-        msg.textContent = err.message.replace("Firebase: ", "");
-      }
-    };
-  };
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-  showLogin();
+    try {
+      btn.disabled = true;
+      btn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-3 h-4.5 w-4.5 text-white inline-block" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg> Logging In...
+      `;
+
+      await signInWithEmailAndPassword(auth, email, password);
+      window.location.hash = "#/dashboard";
+    } catch (err) {
+      error.textContent = err.message.replace("Firebase: ", "");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "Login";
+    }
+  });
 }
